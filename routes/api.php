@@ -59,3 +59,16 @@ Route::group([
         Route::delete('{id}', 'ServiceController@delete')->middleware('shop');
     });
 });
+
+//Service
+Route::group([
+    'prefix' => 'permission'
+], function () {
+    Route::group([
+      'middleware' => 'auth:api'
+    ], function() {
+    	Route::post('{id}', 'ServiceController@createPermission')->middleware('shop');
+        Route::put('{id}', 'ServiceController@editPermission')->middleware('shop');
+        Route::delete('{id}', 'ServiceController@deletePermission')->middleware('shop');
+    });
+});

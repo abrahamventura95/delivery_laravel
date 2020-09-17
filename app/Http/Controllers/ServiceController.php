@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Service;
+use App\Permission;
 
 class ServiceController extends Controller
 {
@@ -52,8 +53,18 @@ class ServiceController extends Controller
      * Show a service
      */
     public function show($id){
-    	$service = Service::find($id);
-    	return $service;
+    	$service = Service::join('users','users.id','=','services.owner')
+    				  ->select('services.*', 'users.name as user_name', 'users.email', 'users.tlfn', 'users.verified', 'users.custom')
+    				  ->where('services.id','=',$id)
+    				  ->orderBy('status','desc')
+    			      ->orderBy('created_at','desc')
+    			      ->get();
+    	$users = Permission::join('users','users.id','=','permissions.user_id')
+    					   ->select('users.*','permissions.status','permissions.id as permission_id')
+    					   ->where('permissions.service_id','=',$id)
+    					   ->get();
+    	$resp = array('service' => $service[0], 'users' => $users);				   
+    	return $resp;
     }
     /**
      * Edit a service
@@ -91,6 +102,69 @@ class ServiceController extends Controller
     	$service = Service::find($id);
         if(isset($service) && $service->owner == auth()->user()->id){
         	$service->delete();
+	        return response()->json([
+	            'message' => 'Successfully deleted!'
+	        ], 201);
+    	}else{
+    		return response()->json([
+	            'message' => 'Unauthorized to deleted!'
+	        ], 401);
+    	}
+    }
+    //Permission
+    /**
+     * Create a permission
+     */
+    public function createPermission($id, Request $request){
+    	$service = Service::find($id);
+
+    	if(isset($service) && $service->owner === auth()->user()->id){
+    		$request->validate([
+	            'user' => 'required'
+	        ]);
+
+	        Permission::create([
+	            'service_id' => $id,
+	            'user_id' => $request->user
+	        ]);
+
+	        return response()->json([
+	            'message' => 'Successfully created service!'
+	        ], 201);
+    	}else{
+    		return response()->json([
+	            'message' => 'Unauthorized!'
+	        ], 401);
+    	}
+        
+    }
+	/**
+     * Edit a permission
+     */
+    public function editPermission($id, Request $request){
+    	$permission = Permission::find($id);
+    	$service = Service::find($permission->service_id);
+
+    	$request->validate([
+			'status' => 'boolean'
+        ]);
+		if(isset($request->status)){
+		    $permission->status = $request->status; 
+		}
+        if($service->owner = auth()->user()->id){
+        	$permission->save();
+        }
+        return $permission;
+    }
+
+    /**
+     * Delete a permission
+     */
+    public function deletePermission($id){
+    	$permission = Permission::find($id);
+    	$service = Service::find($permission->service_id);
+        if(isset($service) && $service->owner == auth()->user()->id && isset($permission)){
+        	$permission->delete();
 	        return response()->json([
 	            'message' => 'Successfully deleted!'
 	        ], 201);
