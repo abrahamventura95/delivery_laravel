@@ -43,3 +43,19 @@ Route::group([
         Route::delete('{id}', 'UserController@delete');
     });
 });
+
+//Service
+Route::group([
+    'prefix' => 'service'
+], function () {
+    Route::group([
+      'middleware' => 'auth:api'
+    ], function() {
+    	Route::post('', 'ServiceController@create')->middleware('shop');
+        Route::get('mine', 'ServiceController@getMine')->middleware('shop');
+        Route::get('', 'ServiceController@get');
+        Route::get('{id}', 'ServiceController@show');
+        Route::put('{id}', 'ServiceController@edit')->middleware('shop');
+        Route::delete('{id}', 'ServiceController@delete')->middleware('shop');
+    });
+});
