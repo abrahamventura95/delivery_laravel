@@ -72,3 +72,19 @@ Route::group([
         Route::delete('{id}', 'ServiceController@deletePermission')->middleware('shop');
     });
 });
+
+//Request
+Route::group([
+    'prefix' => 'request'
+], function () {
+    Route::group([
+      'middleware' => 'auth:api'
+    ], function() {
+    	Route::post('{id}', 'ServiceController@createRequest');
+        Route::put('{id}', 'ServiceController@editRequest');
+        Route::delete('{id}', 'ServiceController@deleteRequest');
+        Route::get('user/{id}', 'ServiceController@getUserRequest');
+        Route::get('{id}', 'ServiceController@getServiceRequest');
+        Route::get('manager/{id}', 'ServiceController@getManagerRequest');
+    });
+});
